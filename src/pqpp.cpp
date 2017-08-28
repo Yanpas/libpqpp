@@ -45,8 +45,8 @@ Statement::Statement(Connection& conn, const std::string& query, std::initialize
 	if(status == PGRES_BAD_RESPONSE) {
 		throw IOError(PQerrorMessage(conn.conn_handle_));
 	} else if (status == PGRES_FATAL_ERROR) {
-	    throw InputError(PQerrorMessage(conn.conn_handle_));
-    }
+		throw InputError(PQerrorMessage(conn.conn_handle_));
+	}
 }
 
 Statement::~Statement() {

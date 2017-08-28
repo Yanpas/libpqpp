@@ -52,17 +52,17 @@ private:
 class Statement {
 public:
 	class RowIterator {
-    public:
-	    RowIterator(PGresult*& res, std::size_t pos);
-	    RowIterator& operator++();
-	    RowIterator& operator*();
-	    bool operator!=(const RowIterator& rhs) const;
-	    const char* operator[](const char* colname);
-	    const char* operator[](int colindex);
-    private:
-	    std::size_t pos_;
-	    PGresult*& res_;
-    };
+	public:
+		RowIterator(PGresult*& res, std::size_t pos);
+		RowIterator& operator++();
+		RowIterator& operator*();
+		bool operator!=(const RowIterator& rhs) const;
+		const char* operator[](const char* colname);
+		const char* operator[](int colindex);
+	private:
+		std::size_t pos_;
+		PGresult*& res_;
+	};
 
 	Statement(Connection& conn, const std::string& query, std::initializer_list<std::string> params = {});
 	~Statement();

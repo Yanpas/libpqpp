@@ -17,5 +17,6 @@ int main() {
 	for(auto& row : s2) {
 		std::cout << "num=" << row[0] << " txt=" << row["txt"] << '\n';
 	}
+	//Statement s3(con, "SELECT (1/0);");
 }
 

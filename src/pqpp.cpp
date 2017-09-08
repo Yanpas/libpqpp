@@ -15,7 +15,15 @@ Connection::Connection(const char* user, const char* dbname, const char* passwor
 	conninfo << "hostaddr=" << address << " port=" << port
 			<< " user=" << user << " password=" << password
 			<< " dbname=" << dbname;
-	conn_handle_ = PQconnectdb(conninfo.str().c_str());
+	connect(conninfo.str());
+}
+
+Connection::Connection(const std::string& conn_str) {
+	connect(conn_str);
+}
+
+void Connection::connect(const std::string& conn_str) {
+	conn_handle_ = PQconnectdb(conn_str.c_str());
 	if(PQstatus(conn_handle_) != CONNECTION_OK) {
 		throw IOError(PQerrorMessage(conn_handle_));
 	}
@@ -33,12 +41,14 @@ void Connection::exec(const char* query) {
 		throw InputError(PQerrorMessage(conn_handle_));
 }
 
-Statement::Statement(Connection& conn, const std::string& query, std::initializer_list<std::string> params) : conn_(conn) {
+/* --- */
+
+Statement::Statement(Connection& conn, const std::string& query, std::initializer_list<Val> params) : conn_(conn) {
 	std::vector<const char*> paramvec(params.size());
 	{
 		size_t i = 0;
 		for(auto& el : params)
-			paramvec[i++] = el.c_str();
+			paramvec[i++] = el.data();
 	}
 	res_ = PQexecParams(conn_.conn_handle_, query.c_str(), paramvec.size(), nullptr, paramvec.data(), nullptr, nullptr, 0);
 	auto status = PQresultStatus(res_);
@@ -47,12 +57,15 @@ Statement::Statement(Connection& conn, const std::string& query, std::initialize
 	} else if (status == PGRES_FATAL_ERROR) {
 		throw InputError(PQerrorMessage(conn.conn_handle_));
 	}
+	rows_n = PQntuples(res_);
 }
 
 Statement::~Statement() {
 	if(res_)
 		PQclear(res_);
 }
+
+/* --- */
 
 Statement::RowIterator::RowIterator(PGresult*& res, std::size_t pos) : pos_(pos), res_(res) {
 }
@@ -83,8 +96,10 @@ Statement::RowIterator Statement::begin() {
 }
 
 Statement::RowIterator Statement::end() {
-	return RowIterator(res_, PQntuples(res_));
+	return RowIterator(res_, rows_n);
 }
+
+/* --- */
 
 Transaction::Transaction(Connection& conn) : conn_(conn) {
 	conn_.exec("BEGIN;");
@@ -101,4 +116,3 @@ void Transaction::commit() {
 }
 
 } /* namespace pqpp */
-
